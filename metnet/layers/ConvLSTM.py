@@ -51,7 +51,7 @@ class ConvLSTMCell(nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x: torch.Tensor, prev_state: list) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, prev_state: list):
         """
         Compute forward pass
 
@@ -81,7 +81,7 @@ class ConvLSTMCell(nn.Module):
 
         return h_cur, c_cur
 
-    def init_hidden(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def init_hidden(self, x: torch.Tensor):
         """
         Initializes the hidden state
         Args:
@@ -168,7 +168,7 @@ class ConvLSTM(nn.Module):
 
     def forward(
         self, x: torch.Tensor, hidden_state: Optional[list] = None
-    ) -> tuple[Tensor, list[tuple[Any, Any]]]:
+    ):
         """
         Computes the output of the ConvLSTM
 
@@ -209,7 +209,7 @@ class ConvLSTM(nn.Module):
         for c in self.cell_list:
             c.reset_parameters()
 
-    def get_init_states(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def get_init_states(self, x: torch.Tensor):
         """
         Constructs the initial hidden states
 
