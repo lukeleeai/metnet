@@ -4,6 +4,7 @@ from torch import nn as nn
 
 def condition_time(x, i=0, size=(12, 16), seq_len=15):
     "create one hot encoded time image-layers, i in [1, seq_len]"
+    print(x.device)
     assert i < seq_len
     times = (torch.eye(seq_len, dtype=x.dtype, device=x.device)[i]).unsqueeze(-1).unsqueeze(-1)
     ones = torch.ones(1, *size, dtype=x.dtype, device=x.device)
