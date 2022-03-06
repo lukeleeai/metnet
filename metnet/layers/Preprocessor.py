@@ -3,7 +3,6 @@ import torch.nn.functional as F
 import torchvision
 from torch import nn
 
-
 class MetNetPreprocessor(nn.Module):
     def __init__(
         self,
@@ -59,4 +58,5 @@ class MetNetPreprocessor(nn.Module):
             if self.split_input
             else torch.cat([sat_center, sat_mean], dim=2)
         )
+        print(x.shape)
         return x

@@ -17,16 +17,17 @@ class DownSampler(nn.Module):
         self.module = nn.Sequential(
             conv2d(in_channels, 160, 3, padding=1),
             nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
-            antialiased_cnns.BlurPool(160, stride=2) if antialiased else nn.Identity(),
+            antialiased_cnns.BlurPool(160, stride=1) if antialiased else nn.Identity(),
             nn.BatchNorm2d(160),
             conv2d(160, output_channels, 3, padding=1),
             nn.BatchNorm2d(output_channels),
             conv2d(output_channels, output_channels, 3, padding=1),
             nn.BatchNorm2d(output_channels),
             conv2d(output_channels, output_channels, 3, padding=1),
-            nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
-            antialiased_cnns.BlurPool(output_channels, stride=2) if antialiased else nn.Identity(),
+            # nn.MaxPool2d((2, 2), stride=1 if antialiased else 1),
+            antialiased_cnns.BlurPool(output_channels, stride=1) if antialiased else nn.Identity(),
         )
 
     def forward(self, x):
-        return self.module.forward(x)
+        x = self.module.forward(x)
+        return x
