@@ -1,16 +1,13 @@
 import torch
 import torch.nn as nn
 from axial_attention import AxialAttention
-from huggingface_hub import PyTorchModelHubMixin
+# from huggingface_hub import PyTorchModelHubMixin
 
-from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed, MetNetPreprocessor
-
-from metnet.layers.utils import get_conv_layer
+from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed
 
 class DownSample(nn.Module):
-    def __init__(self, num_sequences, in_channels, output_channels: int = 64, conv_type: str = "standard"):
+    def __init__(self, output_channels: int = 64, conv_type: str = "standard"):
         super().__init__()
-        conv2d = get_conv_layer(conv_type=conv_type)
         self.output_channels = output_channels
 
         self.module = nn.Sequential(
