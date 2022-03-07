@@ -53,7 +53,7 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         self.drop = nn.Dropout(temporal_dropout)
         if image_encoder in ["downsampler", "default"]:
             # image_encoder = DownSampler(input_channels + forecast_steps)
-            image_encoder = DownSampler(forecast_steps, conv_type="antialiased")
+            image_encoder = DownSampler(forecast_steps)
         else:
             raise ValueError(f"Image_encoder {image_encoder} is not recognized")
         self.image_encoder = TimeDistributed(image_encoder)
