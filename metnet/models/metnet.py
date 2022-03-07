@@ -42,9 +42,9 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         self.input_channels = input_channels
         self.output_channels = output_channels
 
-        self.preprocessor = MetNetPreprocessor(
-            sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
-        )
+        # self.preprocessor = MetNetPreprocessor(
+        #     sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
+        # )
         # Update number of input_channels with output from MetNetPreprocessor
         # new_channels = sat_channels * 4  # Space2Depth
         # new_channels *= 2  # Concatenate two of them together
@@ -52,8 +52,7 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
 
         self.drop = nn.Dropout(temporal_dropout)
         if image_encoder in ["downsampler", "default"]:
-            # image_encoder = DownSampler(input_channels + forecast_steps)
-            image_encoder = DownSampler(forecast_steps)
+            image_encoder = DownSampler(input_channels+forecast_steps)
         else:
             raise ValueError(f"Image_encoder {image_encoder} is not recognized")
         self.image_encoder = TimeDistributed(image_encoder)
