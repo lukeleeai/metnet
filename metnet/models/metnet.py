@@ -27,7 +27,7 @@ class DownSample(nn.Module):
         return x
 
 
-class MetNet(torch.nn.Module, PyTorchModelHubMixin):
+class MetNet(torch.nn.Module):  # PyTorchModelHubMixin
     def __init__(
         self,
         image_encoder: str = "downsampler",

@@ -1,7 +1,7 @@
-einops>=0.3.0
+# einops>=0.3.0
 numpy>=1.19.5
 torchvision>=0.10.0
-antialiased_cnns
+# antialiased_cnns
 axial_attention
 pytorch_msssim
 huggingface_hub
