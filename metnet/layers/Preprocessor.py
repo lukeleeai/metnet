@@ -21,8 +21,8 @@ class MetNetPreprocessor(nn.Module):
             sat_channels: Number of satellite channels
             crop_size: Center crop size
             use_space2depth: Whether to use space2depth on satellite channels, or mean pooling, like in paper
-
         """
+        
         super().__init__()
         self.sat_channels = sat_channels
         self.split_input = split_input

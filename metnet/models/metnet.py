@@ -3,10 +3,7 @@ import torch.nn as nn
 from axial_attention import AxialAttention
 from huggingface_hub import PyTorchModelHubMixin
 
-from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed
-
-#  MetNetPreprocessor, 
-
+from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed, MetNetPreprocessor
 
 class MetNet(torch.nn.Module, PyTorchModelHubMixin):
     def __init__(
@@ -45,9 +42,9 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         self.input_channels = input_channels
         self.output_channels = output_channels
 
-        # self.preprocessor = MetNetPreprocessor(
-        #     sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
-        # )
+        self.preprocessor = MetNetPreprocessor(
+            sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
+        )
         # Update number of input_channels with output from MetNetPreprocessor
         # new_channels = sat_channels * 4  # Space2Depth
         # new_channels *= 2  # Concatenate two of them together
@@ -55,7 +52,8 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
 
         self.drop = nn.Dropout(temporal_dropout)
         if image_encoder in ["downsampler", "default"]:
-            image_encoder = DownSampler(input_channels + forecast_steps)
+            # image_encoder = DownSampler(input_channels + forecast_steps)
+            image_encoder = DownSampler(forecast_steps, conv_type="antialiased")
         else:
             raise ValueError(f"Image_encoder {image_encoder} is not recognized")
         self.image_encoder = TimeDistributed(image_encoder)
@@ -65,7 +63,7 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         )
         self.temporal_agg = nn.Sequential(
             *[
-                AxialAttention(dim=hidden_dim, dim_index=1, heads=3, num_dimensions=2)  # CHG: 8 to 6
+                AxialAttention(dim=hidden_dim, dim_index=1, heads=3, num_dimensions=2)  # CHG: 8 to 3
                 for _ in range(num_att_layers)
             ]
         )

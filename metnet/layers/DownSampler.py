@@ -14,12 +14,14 @@ class DownSampler(nn.Module):
         else:
             antialiased = False
 
+        channels = 64
+
         self.module = nn.Sequential(
-            conv2d(in_channels, 160, 3, padding=1),
+            conv2d(in_channels, channels, 3, padding=1),
             nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
-            antialiased_cnns.BlurPool(160, stride=2) if antialiased else nn.Identity(),
-            nn.BatchNorm2d(160),
-            conv2d(160, output_channels, 3, padding=1),
+            antialiased_cnns.BlurPool(channels, stride=2) if antialiased else nn.Identity(),
+            nn.BatchNorm2d(channels),
+            conv2d(channels, output_channels, 3, padding=1),
             nn.BatchNorm2d(output_channels),
             conv2d(output_channels, output_channels, 3, padding=1),
             nn.BatchNorm2d(output_channels),
