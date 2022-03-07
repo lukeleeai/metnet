@@ -18,7 +18,8 @@ class DownSampler(nn.Module):
 
         self.module = nn.Sequential(
             conv2d(in_channels, channels, 3, padding=1),
-            nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
+            # nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
+            nn.MaxPool2d((2, 2), stride=2),
             antialiased_cnns.BlurPool(channels, stride=2) if antialiased else nn.Identity(),
             nn.BatchNorm2d(channels),
             conv2d(channels, output_channels, 3, padding=1),
@@ -26,7 +27,8 @@ class DownSampler(nn.Module):
             conv2d(output_channels, output_channels, 3, padding=1),
             nn.BatchNorm2d(output_channels),
             conv2d(output_channels, output_channels, 3, padding=1),
-            nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
+            # nn.MaxPool2d((2, 2), stride=1 if antialiased else 2),
+            nn.MaxPool2d((2, 2), stride=2),
             antialiased_cnns.BlurPool(output_channels, stride=2) if antialiased else nn.Identity(),
         )
 
