@@ -65,7 +65,7 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         )
         self.temporal_agg = nn.Sequential(
             *[
-                AxialAttention(dim=hidden_dim, dim_index=1, heads=8, num_dimensions=2)
+                AxialAttention(dim=hidden_dim, dim_index=1, heads=3, num_dimensions=2)  # CHG: 8 to 6
                 for _ in range(num_att_layers)
             ]
         )
