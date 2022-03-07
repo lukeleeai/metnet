@@ -5,6 +5,28 @@ from huggingface_hub import PyTorchModelHubMixin
 
 from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed, MetNetPreprocessor
 
+from metnet.layers.utils import get_conv_layer
+
+class DownSample(nn.Module):
+    def __init__(self, num_sequences, in_channels, output_channels: int = 64, conv_type: str = "standard"):
+        super().__init__()
+        conv2d = get_conv_layer(conv_type=conv_type)
+        self.output_channels = output_channels
+
+        self.module = nn.Sequential(
+            # conv2d(in_channels, 64, 3, padding=1),
+            nn.MaxPool2d((2, 2), stride=2),
+            # nn.BatchNorm2d(output_channels),
+        )
+
+    def forward(self, x):
+        shape = x.shape
+        x = torch.reshape(x, (-1, shape[1] * shape[2], shape[3], shape[4]))
+        x = self.module.forward(x)
+        x = torch.reshape(x, (-1, shape[1], shape[2], shape[3] // 2, shape[4] // 2))
+        return x
+
+
 class MetNet(torch.nn.Module, PyTorchModelHubMixin):
     def __init__(
         self,
@@ -50,6 +72,8 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         # new_channels *= 2  # Concatenate two of them together
         # input_channels = input_channels - sat_channels + new_channels
 
+        self.downsample = DownSample(input_channels, 64)
+
         self.drop = nn.Dropout(temporal_dropout)
         if image_encoder in ["downsampler", "default"]:
             image_encoder = DownSampler(input_channels+forecast_steps)
@@ -69,10 +93,17 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
 
         self.head = nn.Conv2d(hidden_dim, output_channels, kernel_size=(1, 1))  # Reduces to mask
 
+        self.upsample = nn.Sequential(
+            torch.nn.ConvTranspose2d(24, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            torch.nn.ConvTranspose2d(32, 1, kernel_size=3, stride=2, padding=1, output_padding=1)
+        )
+
     def encode_timestep(self, x, fstep=1):
 
         # Preprocess Tensor
         # x = self.preprocessor(x)
+
+        x = self.downsample(x)
 
         # Condition Time
         x = self.ct(x, fstep)
@@ -89,7 +120,9 @@ class MetNet(torch.nn.Module, PyTorchModelHubMixin):
         - imgs [bs, seq_len, channels, h, w]
         """
         x_i = self.encode_timestep(imgs, lead_time)
-        res = self.head(x_i)
+        # res = self.head(x_i)
+        res = self.upsample(x_i)
+
         return res
 
 class TemporalEncoder(nn.Module):
