@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
-from axial_attention import AxialAttention
+# from axial_attention import AxialAttention
 # from huggingface_hub import PyTorchModelHubMixin
 
-from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed
+from metnet.layers import ConditionTime, ConvGRU, DownSampler,TimeDistributed, AxialAttention
 
 class DownSample(nn.Module):
     def __init__(self, output_channels: int = 64, conv_type: str = "standard"):

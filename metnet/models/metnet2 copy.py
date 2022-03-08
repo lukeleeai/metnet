@@ -10,7 +10,31 @@ from huggingface_hub import PyTorchModelHubMixin
 from metnet.layers import DownSampler, MetNetPreprocessor, TimeDistributed
 from metnet.layers.ConvLSTM import ConvLSTM
 from metnet.layers.DilatedCondConv import DilatedResidualConv, UpsampleResidualConv
+from metnet.layers.utils import get_conv_layer
 
+
+
+class DownSample(nn.Module):
+    def __init__(self, in_channels: int, output_channels: int = 64):
+        super().__init__()
+        self.output_channels = output_channels
+
+        conv2d = get_conv_layer()
+
+        self.module = nn.Sequential(
+            conv2d(in_channels, output_channels, 3, padding=1),
+            # nn.MaxPool2d((2, 2), stride=2),
+            # nn.BatchNorm2d(output_channels),
+        )
+
+    def forward(self, x):
+        shape = x.shape
+        x = torch.reshape(x, (-1, shape[1] * shape[2], shape[3], shape[4]))
+        x = self.module.forward(x)
+        print(x.shape)
+        # x = torch.reshape(x, (-1, shape[1], shape[2], shape[3] // 2, shape[4] // 2))
+        x = torch.reshape(x, (-1, 12, output_channels, shape[3] // 2, shape[4] // 2))
+        return x
 
 class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
     """MetNet-2 model for weather forecasting"""
@@ -91,13 +115,17 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
         self.forecast_steps = forecast_steps
         self.input_channels = input_channels
         self.output_channels = output_channels
-        self.preprocessor = MetNetPreprocessor(
-            sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
-        )
-        # Update number of input_channels with output from MetNetPreprocessor
-        new_channels = sat_channels * 4  # Space2Depth
-        new_channels *= 2  # Concatenate two of them together
-        input_channels = input_channels  # - sat_channels + new_channels
+
+        # self.preprocessor = MetNetPreprocessor(
+        #     sat_channels=sat_channels, crop_size=input_size, use_space2depth=True, split_input=True
+        # )
+        # # Update number of input_channels with output from MetNetPreprocessor
+        # new_channels = sat_channels * 4  # Space2Depth
+        # new_channels *= 2  # Concatenate two of them together
+        # input_channels = input_channels  # - sat_channels + new_channels
+
+        self.downsample = DownSample(num_input_timesteps * input_channels)
+
         if image_encoder in ["downsampler", "default"]:
             image_encoder = DownSampler(input_channels, output_channels=input_channels)
         else:
@@ -124,6 +152,7 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
             kernel_size=kernel_size,
             num_layers=num_input_timesteps,
         )
+
         # Convolutional Residual Blocks going from dilation of 1 to 128 with 384 channels
         # 3 stacks of 8 blocks form context aggregating part of arch -> only two shown in image, so have both
         self.context_block_one = nn.ModuleList()
@@ -163,7 +192,7 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
             )
 
         # Center crop the output
-        self.center_crop = torchvision.transforms.CenterCrop(size=center_crop_size)
+        # self.center_crop = torchvision.transforms.CenterCrop(size=center_crop_size)
 
         # Then tile 4x4 back to original size
         # This seems like it would mean something like this, with two applications of a simple upsampling
@@ -195,7 +224,7 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
                     kernel_size=kernel_size,
                     dilation=1,
                 )
-                for _ in range(8)
+                for _ in range(3)  # 8 to 3
             ]
         )
 
@@ -212,6 +241,8 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
         Returns:
             The output predictions for all future timesteps
         """
+
+        # x = self.downsample(x)
 
         # Compute all timesteps, probably can be parallelized
         x = self.image_encoder(x)
@@ -235,7 +266,7 @@ class MetNet2(torch.nn.Module, PyTorchModelHubMixin):
             block_num += 1
 
         # Get Center Crop
-        res = self.center_crop(res)
+        # res = self.center_crop(res)
 
         # Upsample
         if self.upsample_method == "interp":
