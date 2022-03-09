@@ -92,7 +92,8 @@ class MetNet(torch.nn.Module):  # PyTorchModelHubMixin
 
         self.upsample = nn.Sequential(
             torch.nn.ConvTranspose2d(24, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
-            torch.nn.ConvTranspose2d(32, 1, kernel_size=3, stride=2, padding=1, output_padding=1)
+            torch.nn.ConvTranspose2d(32, 1, kernel_size=3, stride=2, padding=1, output_padding=1),
+            torch.nn.Sigmoid()
         )
 
     def encode_timestep(self, x, fstep=1):
